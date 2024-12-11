@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/Ajulll22/belajar-microservice/config"
+	"github.com/Ajulll22/belajar-microservice/internal/product/config"
 	"github.com/Ajulll22/belajar-microservice/internal/product/handler"
 	"github.com/Ajulll22/belajar-microservice/internal/product/repository"
 	"github.com/Ajulll22/belajar-microservice/internal/product/service"
@@ -17,13 +17,18 @@ func Register(router *gin.Engine, db *gorm.DB, redis *redis.Cache, cfg config.Co
 	redisCache := cache.NewRedisCache(redis)
 	api := router.Group("/api")
 
-	productRepository := repository.NewProductRepository(db)
-	productService := service.NewProductService(cfg, redisCache, productRepository)
+	productRepository := repository.NewProductRepository()
+	categoryRepository := repository.NewCategoryRepository()
+
+	productService := service.NewProductService(cfg, db, redisCache, productRepository, categoryRepository)
+
 	productHandler := handler.NewProductHandler(cfg, productService)
 
 	productRouter := api.Group("/product")
 	{
 		productRouter.GET("/", productHandler.GetProducts)
+		productRouter.GET("/:id", productHandler.GetProduct)
+		productRouter.POST("/", productHandler.CreateProduct)
 	}
 
 }

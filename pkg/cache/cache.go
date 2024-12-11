@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/cache/v9"
@@ -39,4 +40,11 @@ func (c *redisCache) Get(ctx context.Context, key string, value interface{}) err
 	}
 
 	return err
+}
+
+func GetCacheKey(key string, additionalKey ...int) string {
+	for _, id := range additionalKey {
+		key += fmt.Sprintf("_%d", id)
+	}
+	return key
 }
