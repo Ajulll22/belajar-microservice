@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+
+	"github.com/Ajulll22/belajar-microservice/pkg/constant"
 )
 
 type Config struct {
@@ -12,6 +14,7 @@ type Config struct {
 	DB_USER  string
 	DB_PASS  string
 	DB_NAME  string
+	constant.GlobalConfig
 }
 
 func GetEnv() Config {
@@ -23,5 +26,7 @@ func GetEnv() Config {
 		DB_USER:  os.Getenv("DB_USER"),
 		DB_PASS:  os.Getenv("DB_PASS"),
 		DB_NAME:  os.Getenv("DB_NAME"),
+
+		GlobalConfig: constant.GetGlobalConfig(),
 	}
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("./config/product.env")
+	err := godotenv.Load("./config/global.env", "./config/product.env")
 	if err != nil {
 		log.Println(err)
 	}

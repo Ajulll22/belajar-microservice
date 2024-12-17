@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+
+	"github.com/Ajulll22/belajar-microservice/pkg/constant"
 )
 
 type Config struct {
@@ -17,6 +19,7 @@ type Config struct {
 	REDIS_PASS         string
 	CACHE_KEY_PRODUCT  string
 	CACHE_KEY_CATEGORY string
+	constant.GlobalConfig
 }
 
 func GetEnv() Config {
@@ -33,5 +36,7 @@ func GetEnv() Config {
 		REDIS_PASS:         os.Getenv("REDIS_PASS"),
 		CACHE_KEY_PRODUCT:  os.Getenv("CACHE_KEY_PRODUCT"),
 		CACHE_KEY_CATEGORY: os.Getenv("CACHE_KEY_CATEGORY"),
+
+		GlobalConfig: constant.GetGlobalConfig(),
 	}
 }

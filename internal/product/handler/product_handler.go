@@ -77,7 +77,7 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 
 	productData := model.Product{}
 
-	res := handling.ResponseSuccess(c, &productData, "Get products success", 200)
+	res := handling.ResponseSuccess(c, &productData, "Create products success", 200)
 
 	bodyRequest := request.ProductInsert{}
 	err := c.ShouldBind(&bodyRequest)
@@ -101,7 +101,6 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 		price, _ := bodyRequest.Price.Int64()
 		stock, _ := bodyRequest.Stock.Int64()
 
-		productData := &productData
 		productData.Name = bodyRequest.Name
 		productData.Price = int(price)
 		productData.Stock = int(stock)
@@ -112,7 +111,7 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 				ID: categoryID,
 			})
 		}
-		err := h.productService.CreateProduct(ctx, productData)
+		err := h.productService.CreateProduct(ctx, &productData, bodyRequest.Pictures)
 		if err != nil {
 			validate = false
 			res = handling.ResponseError(c, err)

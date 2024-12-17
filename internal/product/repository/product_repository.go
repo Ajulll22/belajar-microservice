@@ -62,11 +62,16 @@ func (r *productRepository) FindByID(db *gorm.DB, m *model.Product, id int) erro
 
 func (r *productRepository) Insert(db *gorm.DB, m *model.Product) error {
 
-	query := db.Raw("spMS_product_data_insert ?, ?, ?, ?", m.Name, m.Price, m.Stock, m.Description).Scan(m)
+	data := model.Product{}
+	query := db.Raw("spMS_product_data_insert ?, ?, ?, ?", m.Name, m.Price, m.Stock, m.Description).Scan(&data)
 
 	if query.Error != nil {
 		return query.Error
 	}
+
+	m.ID = data.ID
+	m.CreatedAt = data.CreatedAt
+	m.UpdatedAt = data.UpdatedAt
 
 	array_url := []string{}
 	for _, val := range m.Pictures {
@@ -77,7 +82,7 @@ func (r *productRepository) Insert(db *gorm.DB, m *model.Product) error {
 		if err != nil {
 			return err
 		}
-		query = db.Exec("spMS_product_picture_data_insert ?, ?", m.ID, string(string_url))
+		query := db.Raw("spMS_product_picture_data_insert ?, ?", m.ID, string(string_url)).Scan(m.Pictures)
 		if query.Error != nil {
 			return query.Error
 		}
@@ -92,7 +97,7 @@ func (r *productRepository) Insert(db *gorm.DB, m *model.Product) error {
 		if err != nil {
 			return err
 		}
-		query = db.Exec("spMS_product_category_data_insert ?, ?", m.ID, string(string_category_id))
+		query := db.Exec("spMS_product_category_data_insert ?, ?", m.ID, string(string_category_id))
 		if query.Error != nil {
 			return query.Error
 		}

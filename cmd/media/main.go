@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("./config/media.env")
+	err := godotenv.Load("./config/global.env", "./config/media.env")
 	if err != nil {
 		log.Println(err)
 	}

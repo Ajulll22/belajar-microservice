@@ -87,7 +87,7 @@ func NewErrorWrapper(code int, msg string, validation []validator.ErrorValidator
 	}
 }
 
-func ResponseError(c *gin.Context, err error) BaseResponse {
+func ResponseError(c *gin.Context, err error) BaseResponse[any] {
 	resCode := http.StatusInternalServerError
 	msg := MsgServerError
 	var ew *ErrorWrapper
@@ -113,14 +113,14 @@ func ResponseError(c *gin.Context, err error) BaseResponse {
 			msg = MsgValidationError
 		}
 
-		return BaseResponse{
+		return BaseResponse[any]{
 			Message: msg,
 			Code:    resCode,
 			Error:   ew.Validation,
 		}
 	}
 
-	return BaseResponse{
+	return BaseResponse[any]{
 		Message: msg,
 		Code:    resCode,
 	}
