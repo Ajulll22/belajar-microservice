@@ -6,7 +6,9 @@ import (
 
 	"github.com/Ajulll22/belajar-microservice/internal/product/config"
 	"github.com/Ajulll22/belajar-microservice/internal/product/router"
+	"github.com/Ajulll22/belajar-microservice/pkg/cache"
 	"github.com/Ajulll22/belajar-microservice/pkg/constant"
+	"github.com/Ajulll22/belajar-microservice/pkg/database"
 	"github.com/Ajulll22/belajar-microservice/pkg/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -19,8 +21,8 @@ func main() {
 	}
 	cfg := config.GetEnv()
 
-	redis := config.RedisClient(cfg)
-	db := config.DbConnect(cfg)
+	redis := cache.RedisClient(cfg.REDIS_HOST, cfg.REDIS_PORT, cfg.REDIS_PASS)
+	db := database.SQLConnect(cfg.DB_USER, cfg.DB_PASS, cfg.DB_HOST, cfg.DB_PORT, cfg.DB_NAME)
 
 	if cfg.APP_ENV == constant.EnvironmentProduction {
 		gin.SetMode(gin.ReleaseMode)

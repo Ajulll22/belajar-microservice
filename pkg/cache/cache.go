@@ -6,7 +6,24 @@ import (
 	"time"
 
 	"github.com/go-redis/cache/v9"
+	"github.com/redis/go-redis/v9"
 )
+
+func RedisClient(REDIS_HOST string, REDIS_PORT string, REDIS_PASS string) Cache {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", REDIS_HOST, REDIS_PORT),
+		Password: REDIS_PASS,
+		DB:       0,
+	})
+
+	client := cache.New(&cache.Options{
+		Redis: rdb,
+	})
+
+	return &redisCache{
+		cache: client,
+	}
+}
 
 type Cache interface {
 	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
@@ -15,12 +32,6 @@ type Cache interface {
 
 type redisCache struct {
 	cache *cache.Cache
-}
-
-func NewRedisCache(client *cache.Cache) Cache {
-	return &redisCache{
-		cache: client,
-	}
 }
 
 func (c *redisCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {

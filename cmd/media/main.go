@@ -9,6 +9,7 @@ import (
 	"github.com/Ajulll22/belajar-microservice/internal/media/config"
 	"github.com/Ajulll22/belajar-microservice/internal/media/router"
 	"github.com/Ajulll22/belajar-microservice/pkg/constant"
+	"github.com/Ajulll22/belajar-microservice/pkg/database"
 	"github.com/Ajulll22/belajar-microservice/pkg/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -23,7 +24,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	db := config.DbConnect(ctx, cfg)
+	db := database.MongoConnect(ctx, cfg.DB_USER, cfg.DB_PASS, cfg.DB_HOST, cfg.DB_PORT, cfg.DB_NAME)
 	defer db.Client().Disconnect(ctx)
 
 	if cfg.APP_ENV == constant.EnvironmentProduction {
