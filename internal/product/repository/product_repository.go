@@ -82,7 +82,7 @@ func (r *productRepository) Insert(db *gorm.DB, m *model.Product) error {
 		if err != nil {
 			return err
 		}
-		query := db.Raw("spMS_product_picture_data_insert ?, ?", m.ID, string(string_url)).Scan(m.Pictures)
+		query := db.Raw("spMS_product_picture_data_insert ?, ?", m.ID, string(string_url)).Scan(&(m.Pictures))
 		if query.Error != nil {
 			return query.Error
 		}
