@@ -1,7 +1,12 @@
-DROP TABLE product_picture
-DROP TABLE tran_product_category
-DROP TABLE product
-DROP TABLE category
+USE [master]
+GO
+
+DROP DATABASE [service-product]
+GO
+CREATE DATABASE [service-product]
+GO
+
+USE [service-product]
 GO
 
 CREATE TABLE category (
@@ -28,7 +33,7 @@ GO
 CREATE TABLE product_picture (
 	id INT IDENTITY(1,1) PRIMARY KEY,
 	url VARCHAR(100),
-	product_id INT NOT NULL FOREIGN KEY REFERENCES product(id),
+	product_id INT NOT NULL FOREIGN KEY REFERENCES product(id)
 )
 GO
 
@@ -326,7 +331,7 @@ GO
 -- Create date: 20241002
 -- Description:	Insert product category data
 -- =============================================
-alter PROCEDURE [dbo].[spMS_product_category_data_insert]
+CREATE PROCEDURE [dbo].[spMS_product_category_data_insert]
 	-- Add the parameters for the stored procedure here
 	@product_id INT,
 	@array_category_id VARCHAR(MAX)
