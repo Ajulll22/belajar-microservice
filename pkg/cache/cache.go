@@ -53,9 +53,9 @@ func (c *redisCache) Get(ctx context.Context, key string, value interface{}) err
 	return err
 }
 
-func GetCacheKey(key string, additionalKey ...int) string {
+func GetCacheKey(key string, additionalKey ...string) string {
 	for _, id := range additionalKey {
-		key += fmt.Sprintf("_%d", id)
+		key += fmt.Sprintf("_%s", id)
 	}
 	return key
 }
