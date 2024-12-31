@@ -89,7 +89,39 @@ func (h *authHandler) RefreshToken(c *gin.Context) {
 	c.JSON(res.Code, res)
 }
 func (h *authHandler) Logout(c *gin.Context) {
+	ctx := c.Request.Context()
+	validate := true
 
+	res := handling.ResponseSuccess(c, nil, "Logout success", 200)
+
+	bodyRequest := request.Logout{}
+	err := c.ShouldBindJSON(&bodyRequest)
+	if err != nil {
+		validate = false
+
+		var jsErr *json.UnmarshalTypeError
+		var ve validator.ValidationErrors
+		if errors.As(err, &jsErr) {
+			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+		} else if errors.As(err, &ve) {
+			errList := v.FormatValidation(ve)
+			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+		} else {
+			res = handling.ResponseError(c, err)
+		}
+	}
+
+	if validate {
+
+		err := h.authService.Logout(ctx, bodyRequest.RefreshToken)
+		if err != nil {
+			validate = false
+			res = handling.ResponseError(c, err)
+		}
+
+	}
+
+	c.JSON(res.Code, res)
 }
 
 type authHandler struct {

@@ -37,6 +37,6 @@ func main() {
 	validator.RegisterCustomValidation()
 
 	router.Register(r, db, cfg)
-	port := fmt.Sprintf(":%s", cfg.APP_PORT)
+	port := fmt.Sprintf(":%s", cfg.MEDIA_SERVICE_PORT)
 	r.Run(port)
 }

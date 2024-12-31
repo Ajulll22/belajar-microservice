@@ -188,7 +188,7 @@ func (s *authService) RefreshToken(ctx context.Context, m *response.AuthResponse
 		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create refresh token", nil, err)
 	}
 
-	s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, refreshUUID), td, constant.CacheTTLInvalidate)
+	s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, refreshUUID), nil, constant.CacheTTLInvalidate)
 	s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, td.RefreshUUID), td, td.RefreshExpiry.Sub(time.Time{}))
 
 	m.AccessToken = td.AccessToken
@@ -198,5 +198,33 @@ func (s *authService) RefreshToken(ctx context.Context, m *response.AuthResponse
 }
 
 func (s *authService) Logout(ctx context.Context, refreshToken string) error {
+	errList := []validator.ErrorValidator{}
+
+	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(s.cfg.REFRESH_SECRET), nil
+	})
+	if err != nil {
+		errList = append(errList, validator.ErrorValidator{
+			Key:     "refresh_token",
+			Message: "invalid or expired refresh token",
+		})
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid or expired refresh token", errList, err)
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["uuid"] == nil {
+		errList = append(errList, validator.ErrorValidator{
+			Key:     "refresh_token",
+			Message: "invalid token claims",
+		})
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid token claims", errList, err)
+	}
+
+	refreshUUID := claims["uuid"].(string)
+	s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, refreshUUID), nil, constant.CacheTTLInvalidate)
+
 	return nil
 }

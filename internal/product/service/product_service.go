@@ -144,7 +144,7 @@ func (s *productService) CreateProduct(ctx context.Context, m *model.Product, pi
 	responseMedia := handling.BaseResponse[[]struct {
 		ID string `json:"id"`
 	}]{}
-	url := fmt.Sprintf("http://%s:%s/api/media", s.cfg.HOST, s.cfg.MEDIA_SERVICE_PORT)
+	url := fmt.Sprintf("http://media-service:%s/api/media", s.cfg.MEDIA_SERVICE_PORT)
 	res, err := service.ForwardFilesToService(url, pictures)
 	if err != nil {
 		return handling.NewErrorWrapper(handling.CodeServerError, "failed to upload picture to media", nil, err)

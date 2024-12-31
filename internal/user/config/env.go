@@ -7,8 +7,6 @@ import (
 )
 
 type Config struct {
-	APP_ENV        string
-	APP_PORT       string
 	DB_HOST        string
 	DB_PORT        string
 	DB_USER        string
@@ -23,8 +21,6 @@ type Config struct {
 
 func GetEnv() Config {
 	return Config{
-		APP_ENV:        os.Getenv("APP_ENV"),
-		APP_PORT:       os.Getenv("APP_PORT"),
 		DB_HOST:        os.Getenv("DB_HOST"),
 		DB_PORT:        os.Getenv("DB_PORT"),
 		DB_USER:        os.Getenv("DB_USER"),

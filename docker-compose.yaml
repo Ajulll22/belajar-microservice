@@ -1,0 +1,87 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "pvs1909~"
+      MSSQL_PID: "Developer"
+    ports:
+    - "1433:1433"
+    networks:
+      - app-network
+    volumes:
+      - ./sql:/sql                    
+      - ./scripts:/scripts                    
+      - sqlserver-data:/var/opt/mssql
+    command: ["/bin/bash", "/scripts/entrypoint.sh"]
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: pvs1909~
+    volumes:
+      - mongo_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - app-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["/app/bin/api-gateway"]
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  media-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["/app/bin/media"]
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # entrypoint: ["./scripts/wait-for-it.sh", "sqlserver:1433", "--"]
+    command: ["/app/bin/user"]
+    depends_on:
+      - sqlserver
+      - redis
+    networks:
+      - app-network
+
+  product-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # entrypoint: ["./scripts/wait-for-it.sh", "sqlserver:1433", "--"]
+    command: ["/app/bin/product"]
+    depends_on:
+      - sqlserver
+      - redis
+    networks:
+      - app-network
+
+volumes:
+  mongo_data:
+  sqlserver-data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,8 +1,8 @@
-USE [master]
-GO
+-- USE [master]
+-- GO
 
-DROP DATABASE [service-user]
-GO
+-- DROP DATABASE [service-user]
+-- GO
 CREATE DATABASE [service-user]
 GO
 
@@ -30,6 +30,10 @@ CREATE TABLE user_address (
 	created_at DATETIME DEFAULT GETDATE(),
 	updated_at DATETIME DEFAULT GETDATE()
 )
+GO
+
+INSERT INTO [user] ( username, email, phone_number, dob, password )
+VALUES ( 'administrator', 'ajulrizki@gmail.com', '089503941064', '2000-07-22', '$2a$10$Lv7PbUZL9SsVWelin1HtcuJf4cOlTxOB6Rb65h01i/pGOoNAmXI4e' )
 GO
 
 SET ANSI_NULLS ON

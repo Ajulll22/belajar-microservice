@@ -1,8 +1,8 @@
-USE [master]
-GO
+-- USE [master]
+-- GO
 
-DROP DATABASE [service-product]
-GO
+-- DROP DATABASE [service-product]
+-- GO
 CREATE DATABASE [service-product]
 GO
 

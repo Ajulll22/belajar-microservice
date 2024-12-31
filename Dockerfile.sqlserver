@@ -1,0 +1,12 @@
+# Gunakan image dasar dari Microsoft SQL Server
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+# Set environment variable untuk SQL Server
+ENV ACCEPT_EULA=Y
+ENV SA_PASSWORD=pvs1909~
+
+# Expose port untuk SQL Server
+EXPOSE 1433
+
+# Start SQL Server
+CMD ["/opt/mssql/bin/sqlservr"]
