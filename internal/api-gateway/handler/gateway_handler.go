@@ -11,7 +11,7 @@ import (
 )
 
 func (h *gatewayHandler) UserProxy(c *gin.Context) {
-	url := fmt.Sprintf("http://user-service:%s%s", h.cfg.USER_SERVICE_PORT, c.Request.URL.Path)
+	url := fmt.Sprintf("http://%s:%s%s", h.cfg.USER_SERVICE_NAME, h.cfg.USER_SERVICE_PORT, c.Request.URL.Path)
 
 	res, err := h.gatewayService.ForwardRequest(c, url)
 	if err != nil {
@@ -31,7 +31,7 @@ func (h *gatewayHandler) UserProxy(c *gin.Context) {
 }
 
 func (h *gatewayHandler) MediaProxy(c *gin.Context) {
-	url := fmt.Sprintf("http://media-service:%s%s", h.cfg.MEDIA_SERVICE_PORT, c.Request.URL.Path)
+	url := fmt.Sprintf("http://%s:%s%s", h.cfg.MEDIA_SERVICE_NAME, h.cfg.MEDIA_SERVICE_PORT, c.Request.URL.Path)
 
 	res, err := h.gatewayService.ForwardRequest(c, url)
 	if err != nil {
@@ -51,7 +51,7 @@ func (h *gatewayHandler) MediaProxy(c *gin.Context) {
 }
 
 func (h *gatewayHandler) ProductProxy(c *gin.Context) {
-	url := fmt.Sprintf("http://product-service:%s%s", h.cfg.PRODUCT_SERVICE_PORT, c.Request.URL.Path)
+	url := fmt.Sprintf("http://%s:%s%s", h.cfg.PRODUCT_SERVICE_NAME, h.cfg.PRODUCT_SERVICE_PORT, c.Request.URL.Path)
 
 	res, err := h.gatewayService.ForwardRequest(c, url)
 	if err != nil {

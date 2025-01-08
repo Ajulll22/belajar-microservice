@@ -10,10 +10,10 @@ services:
     networks:
       - app-network
     volumes:
-      - ./sql:/sql                    
-      - ./scripts:/scripts                    
       - sqlserver-data:/var/opt/mssql
-    command: ["/bin/bash", "/scripts/entrypoint.sh"]
+    #   - ./sql:/sql                    
+    #   - ./scripts:/scripts                    
+    # command: ["/bin/bash", "/scripts/entrypoint.sh"]
 
   redis:
     image: redis:latest

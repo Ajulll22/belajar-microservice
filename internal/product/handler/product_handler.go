@@ -79,21 +79,25 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 
 	res := handling.ResponseSuccess(c, &productData, "Create products success", 200)
 
-	bodyRequest := request.ProductInsert{}
-	err := c.ShouldBind(&bodyRequest)
-	if err != nil {
-		validate = false
+	bodyRequest := request.CreateProduct{}
+	if validate {
 
-		var jsErr *json.UnmarshalTypeError
-		var ve validator.ValidationErrors
-		if errors.As(err, &jsErr) {
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
-		} else if errors.As(err, &ve) {
-			errList := v.FormatValidation(ve)
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
-		} else {
-			res = handling.ResponseError(c, err)
+		err := c.ShouldBind(&bodyRequest)
+		if err != nil {
+			validate = false
+
+			var jsErr *json.UnmarshalTypeError
+			var ve validator.ValidationErrors
+			if errors.As(err, &jsErr) {
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+			} else if errors.As(err, &ve) {
+				errList := v.FormatValidation(ve)
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+			} else {
+				res = handling.ResponseError(c, err)
+			}
 		}
+
 	}
 
 	if validate {
@@ -123,7 +127,70 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 }
 
 func (h *productHandler) UpdateProduct(c *gin.Context) {
+	ctx := c.Request.Context()
+	validate := true
 
+	productData := model.Product{}
+
+	res := handling.ResponseSuccess(c, &productData, "Update products success", 200)
+
+	ID, err := strconv.Atoi(c.Param("ID"))
+	if err != nil {
+		validate = false
+		res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "invalid parameter", nil, err))
+	}
+
+	bodyRequest := request.UpdateProduct{}
+	if validate {
+
+		err := c.ShouldBind(&bodyRequest)
+		if err != nil {
+			validate = false
+
+			var jsErr *json.UnmarshalTypeError
+			var ve validator.ValidationErrors
+			if errors.As(err, &jsErr) {
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+			} else if errors.As(err, &ve) {
+				errList := v.FormatValidation(ve)
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+			} else {
+				res = handling.ResponseError(c, err)
+			}
+		}
+
+	}
+
+	if validate {
+
+		price, _ := bodyRequest.Price.Int64()
+		stock, _ := bodyRequest.Stock.Int64()
+
+		productData.ID = ID
+		productData.Name = bodyRequest.Name
+		productData.Price = int(price)
+		productData.Stock = int(stock)
+		productData.Description = bodyRequest.Description
+
+		for _, categoryID := range bodyRequest.Categories {
+			productData.Categories = append(productData.Categories, model.ProductCategory{
+				ID: categoryID,
+			})
+		}
+		for _, pictureURL := range bodyRequest.ExistingPictures {
+			productData.Pictures = append(productData.Pictures, model.ProductPicture{
+				Url: pictureURL,
+			})
+		}
+		err := h.productService.UpdateProduct(ctx, &productData, bodyRequest.NewPictures)
+		if err != nil {
+			validate = false
+			res = handling.ResponseError(c, err)
+		}
+
+	}
+
+	c.JSON(res.Code, res)
 }
 
 func (h *productHandler) DeleteProduct(c *gin.Context) {

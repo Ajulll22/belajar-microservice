@@ -23,20 +23,24 @@ func (h *authHandler) Login(c *gin.Context) {
 	res := handling.ResponseSuccess(c, &authResponse, "Login success", 200)
 
 	bodyRequest := request.Login{}
-	err := c.ShouldBindJSON(&bodyRequest)
-	if err != nil {
-		validate = false
+	if validate {
 
-		var jsErr *json.UnmarshalTypeError
-		var ve validator.ValidationErrors
-		if errors.As(err, &jsErr) {
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
-		} else if errors.As(err, &ve) {
-			errList := v.FormatValidation(ve)
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
-		} else {
-			res = handling.ResponseError(c, err)
+		err := c.ShouldBindJSON(&bodyRequest)
+		if err != nil {
+			validate = false
+
+			var jsErr *json.UnmarshalTypeError
+			var ve validator.ValidationErrors
+			if errors.As(err, &jsErr) {
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+			} else if errors.As(err, &ve) {
+				errList := v.FormatValidation(ve)
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+			} else {
+				res = handling.ResponseError(c, err)
+			}
 		}
+
 	}
 
 	if validate {
@@ -60,20 +64,24 @@ func (h *authHandler) RefreshToken(c *gin.Context) {
 	res := handling.ResponseSuccess(c, &authResponse, "Refresh token success", 200)
 
 	bodyRequest := request.RefreshToken{}
-	err := c.ShouldBindJSON(&bodyRequest)
-	if err != nil {
-		validate = false
+	if validate {
 
-		var jsErr *json.UnmarshalTypeError
-		var ve validator.ValidationErrors
-		if errors.As(err, &jsErr) {
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
-		} else if errors.As(err, &ve) {
-			errList := v.FormatValidation(ve)
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
-		} else {
-			res = handling.ResponseError(c, err)
+		err := c.ShouldBindJSON(&bodyRequest)
+		if err != nil {
+			validate = false
+
+			var jsErr *json.UnmarshalTypeError
+			var ve validator.ValidationErrors
+			if errors.As(err, &jsErr) {
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+			} else if errors.As(err, &ve) {
+				errList := v.FormatValidation(ve)
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+			} else {
+				res = handling.ResponseError(c, err)
+			}
 		}
+
 	}
 
 	if validate {
@@ -95,20 +103,24 @@ func (h *authHandler) Logout(c *gin.Context) {
 	res := handling.ResponseSuccess(c, nil, "Logout success", 200)
 
 	bodyRequest := request.Logout{}
-	err := c.ShouldBindJSON(&bodyRequest)
-	if err != nil {
-		validate = false
+	if validate {
 
-		var jsErr *json.UnmarshalTypeError
-		var ve validator.ValidationErrors
-		if errors.As(err, &jsErr) {
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
-		} else if errors.As(err, &ve) {
-			errList := v.FormatValidation(ve)
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
-		} else {
-			res = handling.ResponseError(c, err)
+		err := c.ShouldBindJSON(&bodyRequest)
+		if err != nil {
+			validate = false
+
+			var jsErr *json.UnmarshalTypeError
+			var ve validator.ValidationErrors
+			if errors.As(err, &jsErr) {
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+			} else if errors.As(err, &ve) {
+				errList := v.FormatValidation(ve)
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+			} else {
+				res = handling.ResponseError(c, err)
+			}
 		}
+
 	}
 
 	if validate {

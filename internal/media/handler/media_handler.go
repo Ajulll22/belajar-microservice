@@ -23,20 +23,24 @@ func (h *mediaHandler) UploadMedia(c *gin.Context) {
 	res := handling.ResponseSuccess(c, &mediaDataList, "Upload Media Success", 200)
 
 	bodyRequest := request.UploadMedia{}
-	err := c.ShouldBind(&bodyRequest)
-	if err != nil {
-		validate = false
+	if validate {
 
-		var jsErr *json.UnmarshalTypeError
-		var ve validator.ValidationErrors
-		if errors.As(err, &jsErr) {
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
-		} else if errors.As(err, &ve) {
-			errList := v.FormatValidation(ve)
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
-		} else {
-			res = handling.ResponseError(c, err)
+		err := c.ShouldBind(&bodyRequest)
+		if err != nil {
+			validate = false
+
+			var jsErr *json.UnmarshalTypeError
+			var ve validator.ValidationErrors
+			if errors.As(err, &jsErr) {
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+			} else if errors.As(err, &ve) {
+				errList := v.FormatValidation(ve)
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+			} else {
+				res = handling.ResponseError(c, err)
+			}
 		}
+
 	}
 
 	if validate {

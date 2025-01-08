@@ -26,7 +26,7 @@ FROM alpine:latest
 # Set working directory
 WORKDIR /app
 
-RUN apk add --no-cache bash
+# RUN apk add --no-cache bash
 
 # Copy binary dari stage builder
 COPY --from=builder /app/bin /app/bin

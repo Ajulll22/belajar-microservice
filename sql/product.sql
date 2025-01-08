@@ -50,19 +50,6 @@ VALUES ('Alas Kaki'),
 	('Sneakers')
 GO
 
-INSERT INTO product(name, price, stock, description)
-VALUES ('Asics Gel Kayano 14', 2200000, 5, 'test description')
-GO
-
-INSERT INTO product_picture(url, product_id)
-VALUES ('/asset/ba917643-0f6d-4044-94b9-33fd2bb36d89', 1)
-GO
-
-INSERT INTO tran_product_category (product_id, category_id)
-VALUES (1,1),
-	(1, 4)
-GO
-
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -342,13 +329,53 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	DELETE FROM tran_product_category
-	WHERE product_id = @product_id
-
 	INSERT INTO tran_product_category (product_id, category_id)
 	SELECT 
 		@product_id, value 
 	FROM OPENJSON(@array_category_id)
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Ajulll
+-- Create date: 20241002
+-- Description:	Update product category data
+-- =============================================
+CREATE PROCEDURE [dbo].[spMS_product_category_data_update]
+	-- Add the parameters for the stored procedure here
+	@product_id INT,
+	@array_category_id VARCHAR(MAX)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	DECLARE @tmp_tran_category TABLE (
+		product_id INT,
+		category_id INT
+	)
+
+	INSERT INTO @tmp_tran_category
+	SELECT @product_id, value 
+	FROM OPENJSON(@array_category_id)
+
+	MERGE tran_product_category AS target
+	USING @tmp_tran_category AS source
+	ON target.category_id = source.category_id AND target.product_id = source.product_id
+
+	WHEN NOT MATCHED BY target AND @product_id = source.product_id THEN
+	INSERT (product_id, category_id)
+	VALUES (@product_id, source.category_id)
+	
+	WHEN NOT MATCHED BY source AND target.product_id = @product_id THEN
+	DELETE;
 
 END
 GO
@@ -380,6 +407,47 @@ BEGIN
 
 	SELECT * FROM product_picture
 	WHERE product_id = @product_id
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Ajulll
+-- Create date: 20241002
+-- Description:	Update product picture data
+-- =============================================
+CREATE PROCEDURE [dbo].[spMS_product_picture_data_update]
+	-- Add the parameters for the stored procedure here
+	@product_id INT,
+	@array_url VARCHAR(MAX)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	DECLARE @tmp_picture TABLE (
+		product_id INT,
+		url VARCHAR(100)
+	)
+	INSERT INTO @tmp_picture
+	SELECT @product_id, value FROM OPENJSON(@array_url)
+
+	MERGE product_picture AS target
+	USING @tmp_picture AS source
+	ON target.url = source.url AND target.product_id = source.product_id
+
+	WHEN NOT MATCHED BY target AND @product_id = source.product_id THEN
+	INSERT (product_id, url)
+	VALUES (@product_id, source.url)
+	
+	WHEN NOT MATCHED BY source AND target.product_id = @product_id THEN
+	DELETE;
 
 END
 GO
