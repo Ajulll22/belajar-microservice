@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Ajulll22/belajar-microservice/pkg/security"
 	"github.com/go-redis/cache/v9"
 	"github.com/redis/go-redis/v9"
 )
 
 func RedisClient(REDIS_HOST string, REDIS_PORT string, REDIS_PASS string) Cache {
+	clear_password := security.Decrypt(REDIS_PASS, "62277ecdae08d9e813ab17a4ec2db8c58db38e398617824a2ef035c64d3da4be")
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", REDIS_HOST, REDIS_PORT),
-		Password: REDIS_PASS,
+		Password: clear_password,
 		DB:       0,
 	})
 

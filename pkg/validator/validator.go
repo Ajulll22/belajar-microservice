@@ -16,6 +16,8 @@ func getErrorMsg(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
 		return "can not be empty!"
+	case "required_without":
+		return "can not be empty if " + formatter.ToSnakeCase(fe.Param()) + " is not present!"
 	case "max":
 		return "length maximum " + formatter.ToSnakeCase(fe.Param()) + "!"
 	case "min":

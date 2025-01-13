@@ -20,6 +20,6 @@ type UpdateProduct struct {
 	Stock            json.Number             `form:"stock"`
 	Description      string                  `form:"description"`
 	Categories       []int                   `form:"categories" binding:"required,min=1,dive,required"`
-	ExistingPictures []string                `form:"existing_pictures" binding:"required_without=NewPictures"`
-	NewPictures      []*multipart.FileHeader `form:"new_pictures" binding:"required_without=ExistingPictures"`
+	ExistingPictures []string                `form:"existing_pictures"`
+	NewPictures      []*multipart.FileHeader `form:"new_pictures" binding:"required_without=ExistingPictures,filesize=2,filetype=image"`
 }

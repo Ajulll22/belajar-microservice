@@ -1,0 +1,122 @@
+package broker
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/Ajulll22/belajar-microservice/pkg/security"
+	"github.com/streadway/amqp"
+)
+
+func RabbitMQConnect(RABBIT_HOST, RABBIT_USER, RABBIT_PASS, RABBIT_PORT string) RabbitMQ {
+	clear_password := security.Decrypt(RABBIT_PASS, "62277ecdae08d9e813ab17a4ec2db8c58db38e398617824a2ef035c64d3da4be")
+
+	url := fmt.Sprintf("amqp://%s:%s@%s:%s/", RABBIT_USER, clear_password, RABBIT_HOST, RABBIT_PORT)
+
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		panic(err)
+	}
+
+	channel, err := conn.Channel()
+	if err != nil {
+		panic(err)
+	}
+
+	return &rabbitMQ{
+		Conn:    conn,
+		Channel: channel,
+	}
+}
+
+type RabbitMQ interface {
+	DeclareExchange(exchangeName, exchangeType string) error
+	DeclareQueue(queueName string) (amqp.Queue, error)
+	BindQueue(queueName, exchangeName, routingKey string) error
+	Publish(exchange, routingKey string, message []byte) error
+	Consume(queue string, handler func([]byte) error) error
+	Close()
+}
+
+type rabbitMQ struct {
+	Conn    *amqp.Connection
+	Channel *amqp.Channel
+}
+
+func (r *rabbitMQ) DeclareExchange(exchangeName, exchangeType string) error {
+	return r.Channel.ExchangeDeclare(
+		exchangeName, // name
+		exchangeType, // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
+	)
+}
+
+func (r *rabbitMQ) DeclareQueue(queueName string) (amqp.Queue, error) {
+	return r.Channel.QueueDeclare(
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+}
+
+func (r *rabbitMQ) BindQueue(queueName, exchangeName, routingKey string) error {
+	return r.Channel.QueueBind(
+		queueName,    // queue name
+		routingKey,   // routing key
+		exchangeName, // exchange
+		false,        // no-wait
+		nil,          // arguments
+	)
+}
+
+func (r *rabbitMQ) Publish(exchange, routingKey string, message []byte) error {
+	err := r.Channel.Publish(
+		exchange,   // Exchange
+		routingKey, // Routing key
+		false,      // Mandatory
+		false,      // Immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        message,
+		},
+	)
+	return err
+}
+
+func (r *rabbitMQ) Consume(queue string, handler func([]byte) error) error {
+	msgs, err := r.Channel.Consume(
+		queue, // Queue name
+		"",    // Consumer name
+		true,  // Auto-ack
+		false, // Exclusive
+		false, // No-local
+		false, // No-wait
+		nil,   // Arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for msg := range msgs {
+			err := handler(msg.Body)
+			if err != nil {
+				log.Println("Error process message, ", err.Error())
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (r *rabbitMQ) Close() {
+	r.Conn.Close()
+	r.Channel.Close()
+}

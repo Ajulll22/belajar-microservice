@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 
 	"github.com/Ajulll22/belajar-microservice/internal/product/config"
+	"github.com/Ajulll22/belajar-microservice/internal/product/dto/response"
 	"github.com/Ajulll22/belajar-microservice/internal/product/model"
 	"github.com/Ajulll22/belajar-microservice/internal/product/repository"
+	"github.com/Ajulll22/belajar-microservice/pkg/broker"
 	"github.com/Ajulll22/belajar-microservice/pkg/cache"
 	"github.com/Ajulll22/belajar-microservice/pkg/constant"
 	"github.com/Ajulll22/belajar-microservice/pkg/handling"
@@ -27,14 +30,15 @@ type ProductService interface {
 	DeleteProduct(ctx context.Context, m *model.Product) error
 }
 
-func NewProductService(cfg config.Config, db *gorm.DB, cache cache.Cache, productRepository repository.ProductRepository, categoryRepository repository.CategoryRepository) ProductService {
-	return &productService{cfg, db, cache, productRepository, categoryRepository}
+func NewProductService(cfg config.Config, db *gorm.DB, cache cache.Cache, rmq broker.RabbitMQ, productRepository repository.ProductRepository, categoryRepository repository.CategoryRepository) ProductService {
+	return &productService{cfg, db, cache, rmq, productRepository, categoryRepository}
 }
 
 type productService struct {
 	cfg                config.Config
 	db                 *gorm.DB
 	cache              cache.Cache
+	rmq                broker.RabbitMQ
 	productRepository  repository.ProductRepository
 	categoryRepository repository.CategoryRepository
 }
@@ -236,9 +240,7 @@ func (s *productService) UpdateProduct(ctx context.Context, m *model.Product, pi
 
 	if len(pictures) > 0 {
 
-		responseMedia := handling.BaseResponse[[]struct {
-			ID string `json:"id"`
-		}]{}
+		responseMedia := handling.BaseResponse[[]response.MediaResponse]{}
 		url := fmt.Sprintf("http://%s:%s/api/media", s.cfg.MEDIA_SERVICE_NAME, s.cfg.MEDIA_SERVICE_PORT)
 		res, err := service.ForwardFilesToService(url, pictures)
 		if err != nil {
@@ -274,6 +276,24 @@ func (s *productService) UpdateProduct(ctx context.Context, m *model.Product, pi
 	err = s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_PRODUCT), nil, constant.CacheTTLInvalidate)
 	if err != nil {
 		return handling.NewErrorWrapper(handling.CodeServerError, "failed to delete product from cache", nil, err)
+	}
+
+	for _, picture := range m.DeletedPictures {
+		log.Println(picture.Url)
+		messageBody := response.MediaResponse{
+			ID: picture.Url,
+		}
+		messageByte, err := json.Marshal(messageBody)
+		if err != nil {
+			log.Println("Error marshal message, ", err.Error())
+			return err
+		}
+
+		s.rmq.Publish(
+			s.cfg.MEDIA_EXCHANGE,
+			"delete_media",
+			messageByte,
+		)
 	}
 
 	return nil

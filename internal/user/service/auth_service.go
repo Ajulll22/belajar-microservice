@@ -118,7 +118,7 @@ func (s *authService) RefreshToken(ctx context.Context, m *response.AuthResponse
 			Key:     "refresh_token",
 			Message: "invalid or expired refresh token",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "invalid or expired refresh token", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid or expired refresh token", errList, nil)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
@@ -127,32 +127,32 @@ func (s *authService) RefreshToken(ctx context.Context, m *response.AuthResponse
 			Key:     "refresh_token",
 			Message: "invalid token claims",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "invalid token claims", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid token claims", errList, nil)
 	}
 
 	refreshUUID := claims["uuid"].(string)
 	err = s.cache.Get(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, refreshUUID), &td)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get token from cache", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get token from cache", nil, nil)
 	}
 	if td.UserID == 0 {
 		errList = append(errList, validator.ErrorValidator{
 			Key:     "refresh_token",
 			Message: "invalid refersh token",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "invalid refersh token", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid refersh token", errList, nil)
 	}
 
 	err = s.userRepository.FindByID(s.db, &userData, td.UserID)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get user from db", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get user from db", nil, nil)
 	}
 	if userData.ID == 0 {
 		errList = append(errList, validator.ErrorValidator{
 			Key:     "refresh_token",
 			Message: "refresh token user not found",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "refresh token user not found", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "refresh token user not found", errList, nil)
 	}
 
 	td = model.TokenDetails{
@@ -173,7 +173,7 @@ func (s *authService) RefreshToken(ctx context.Context, m *response.AuthResponse
 	newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	td.AccessToken, err = newAccessToken.SignedString([]byte(s.cfg.ACCESS_SECRET))
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create access token", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create access token", nil, nil)
 	}
 
 	// Create refresh token
@@ -185,7 +185,7 @@ func (s *authService) RefreshToken(ctx context.Context, m *response.AuthResponse
 	newRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	td.RefreshToken, err = newRefreshToken.SignedString([]byte(s.cfg.REFRESH_SECRET))
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create refresh token", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create refresh token", nil, nil)
 	}
 
 	s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, refreshUUID), nil, constant.CacheTTLInvalidate)

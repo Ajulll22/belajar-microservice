@@ -97,7 +97,7 @@ func (r *productRepository) Insert(db *gorm.DB, m *model.Product) error {
 		if err != nil {
 			return err
 		}
-		query := db.Exec("spMS_product_category_data_insert ?, ?", m.ID, string(string_category_id))
+		query := db.Raw("spMS_product_category_data_insert ?, ?", m.ID, string(string_category_id)).Scan(&(m.Categories))
 		if query.Error != nil {
 			return query.Error
 		}
@@ -122,7 +122,7 @@ func (r *productRepository) Update(db *gorm.DB, m *model.Product) error {
 		if err != nil {
 			return err
 		}
-		query = db.Exec("spMS_product_picture_data_update ?, ?", m.ID, string(string_url))
+		query = db.Raw("spMS_product_picture_data_update ?, ?", m.ID, string(string_url)).Scan(&(m.DeletedPictures))
 		if query.Error != nil {
 			return query.Error
 		}
@@ -137,7 +137,7 @@ func (r *productRepository) Update(db *gorm.DB, m *model.Product) error {
 		if err != nil {
 			return err
 		}
-		query = db.Exec("spMS_product_category_data_update ?, ?", m.ID, string(string_category_id))
+		query = db.Raw("spMS_product_category_data_update ?, ?", m.ID, string(string_category_id)).Scan(&(m.DeletedCategories))
 		if query.Error != nil {
 			return query.Error
 		}

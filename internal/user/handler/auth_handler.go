@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 
 	"github.com/Ajulll22/belajar-microservice/internal/user/config"
 	"github.com/Ajulll22/belajar-microservice/internal/user/dto/request"
@@ -89,6 +90,7 @@ func (h *authHandler) RefreshToken(c *gin.Context) {
 		err := h.authService.RefreshToken(ctx, &authResponse, bodyRequest.RefreshToken)
 		if err != nil {
 			validate = false
+			log.Println(err.Error())
 			res = handling.ResponseError(c, err)
 		}
 

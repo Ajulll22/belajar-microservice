@@ -334,6 +334,11 @@ BEGIN
 		@product_id, value 
 	FROM OPENJSON(@array_category_id)
 
+	SELECT 
+		b.id, b.name 
+	FROM tran_product_category a
+	JOIN category b ON a.category_id = b.id
+
 END
 GO
 
@@ -357,6 +362,10 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
+	DECLARE @deleted_tran_category TABLE (
+		category_id INT
+	)
+
 	DECLARE @tmp_tran_category TABLE (
 		product_id INT,
 		category_id INT
@@ -375,7 +384,14 @@ BEGIN
 	VALUES (@product_id, source.category_id)
 	
 	WHEN NOT MATCHED BY source AND target.product_id = @product_id THEN
-	DELETE;
+	DELETE
+
+	OUTPUT DELETED.category_id INTO @deleted_tran_category;
+
+	SELECT 
+		b.id, b.name
+	FROM @deleted_tran_category a
+	JOIN category b ON a.category_id = b.id
 
 END
 GO
@@ -431,6 +447,11 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
+	DECLARE @res_deleted_picture TABLE (
+		id INT,
+		url VARCHAR(100)
+	)
+
 	DECLARE @tmp_picture TABLE (
 		product_id INT,
 		url VARCHAR(100)
@@ -447,7 +468,11 @@ BEGIN
 	VALUES (@product_id, source.url)
 	
 	WHEN NOT MATCHED BY source AND target.product_id = @product_id THEN
-	DELETE;
+	DELETE
+
+	OUTPUT DELETED.id, DELETED.url INTO @res_deleted_picture;
+
+	SELECT * FROM @res_deleted_picture
 
 END
 GO

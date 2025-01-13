@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"strconv"
 
 	"github.com/Ajulll22/belajar-microservice/internal/product/config"
@@ -134,7 +135,7 @@ func (h *productHandler) UpdateProduct(c *gin.Context) {
 
 	res := handling.ResponseSuccess(c, &productData, "Update products success", 200)
 
-	ID, err := strconv.Atoi(c.Param("ID"))
+	ID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		validate = false
 		res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "invalid parameter", nil, err))
@@ -184,6 +185,7 @@ func (h *productHandler) UpdateProduct(c *gin.Context) {
 		}
 		err := h.productService.UpdateProduct(ctx, &productData, bodyRequest.NewPictures)
 		if err != nil {
+			log.Println(err.Error())
 			validate = false
 			res = handling.ResponseError(c, err)
 		}
