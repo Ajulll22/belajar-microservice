@@ -41,7 +41,7 @@ func (s *authService) Login(ctx context.Context, m *response.AuthResponse, usern
 
 	err := s.userRepository.FindByUsername(s.db, &userData, username)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get user from db", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get user from db", nil, nil)
 	}
 
 	if userData.Username != username {
@@ -49,7 +49,7 @@ func (s *authService) Login(ctx context.Context, m *response.AuthResponse, usern
 			Key:     "username",
 			Message: "username not found",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "username not found", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "username not found", errList, nil)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(password))
@@ -58,7 +58,7 @@ func (s *authService) Login(ctx context.Context, m *response.AuthResponse, usern
 			Key:     "password",
 			Message: "invalid password",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "invalid password", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid password", errList, nil)
 	}
 
 	td := model.TokenDetails{
@@ -79,7 +79,7 @@ func (s *authService) Login(ctx context.Context, m *response.AuthResponse, usern
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	td.AccessToken, err = accessToken.SignedString([]byte(s.cfg.ACCESS_SECRET))
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create access token", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create access token", nil, nil)
 	}
 
 	// Create refresh token
@@ -91,7 +91,7 @@ func (s *authService) Login(ctx context.Context, m *response.AuthResponse, usern
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	td.RefreshToken, err = refreshToken.SignedString([]byte(s.cfg.REFRESH_SECRET))
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create refresh token", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to create refresh token", nil, nil)
 	}
 
 	s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_USER, td.RefreshUUID), td, td.RefreshExpiry.Sub(time.Time{}))
@@ -211,7 +211,7 @@ func (s *authService) Logout(ctx context.Context, refreshToken string) error {
 			Key:     "refresh_token",
 			Message: "invalid or expired refresh token",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "invalid or expired refresh token", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid or expired refresh token", errList, nil)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
@@ -220,7 +220,7 @@ func (s *authService) Logout(ctx context.Context, refreshToken string) error {
 			Key:     "refresh_token",
 			Message: "invalid token claims",
 		})
-		return handling.NewErrorWrapper(handling.CodeClientError, "invalid token claims", errList, err)
+		return handling.NewErrorWrapper(handling.CodeClientError, "invalid token claims", errList, nil)
 	}
 
 	refreshUUID := claims["uuid"].(string)

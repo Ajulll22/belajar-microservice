@@ -19,6 +19,7 @@ func Register(router *gin.Engine, db *gorm.DB, redis cache.Cache, cfg config.Con
 	api := router.Group("/api")
 
 	productRepository := repository.NewProductRepository()
+	productPictureRepository := repository.NewProductPictureRepository()
 	categoryRepository := repository.NewCategoryRepository()
 
 	err := rmq.DeclareExchange(cfg.MEDIA_EXCHANGE, "direct")
@@ -26,7 +27,7 @@ func Register(router *gin.Engine, db *gorm.DB, redis cache.Cache, cfg config.Con
 		log.Println(err)
 	}
 
-	productService := service.NewProductService(cfg, db, redis, rmq, productRepository, categoryRepository)
+	productService := service.NewProductService(cfg, db, redis, rmq, productRepository, productPictureRepository, categoryRepository)
 
 	productHandler := handler.NewProductHandler(cfg, productService)
 

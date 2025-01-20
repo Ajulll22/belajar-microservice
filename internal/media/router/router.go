@@ -29,28 +29,45 @@ func Register(router *gin.Engine, db *mongo.Database, cfg config.Config, rmq bro
 	mediaRouter := api.Group("/media")
 	{
 		mediaRouter.POST("/", mediaHandler.UploadMedia)
-		mediaRouter.DELETE("/:fileID", mediaHandler.DeleteMedia)
 	}
 }
 
 func RegisterConsumer(db *mongo.Database, cfg config.Config, rmq broker.RabbitMQ) {
 	mediaRepository := repository.NewMediaRepository()
 
-	mediaConsumer := consumer.NewMediaConsumer(db, cfg, mediaRepository)
+	mediaService := service.NewMediaService(db, cfg, mediaRepository)
+
+	mediaConsumer := consumer.NewMediaConsumer(cfg, mediaService)
+
+	routes := []broker.ConsumerRoute{
+		{
+			Key:     "delete_media",
+			Handler: mediaConsumer.DeleteMedia,
+			Async:   false,
+			AutoAck: false,
+			Queue:   "delete_media_" + cfg.MEDIA_QUEUE,
+		},
+	}
 
 	err := rmq.DeclareExchange(cfg.MEDIA_EXCHANGE, "direct")
 	if err != nil {
 		log.Println(err)
 	}
-	queue, err := rmq.DeclareQueue(cfg.MEDIA_QUEUE)
-	if err != nil {
-		log.Println(err)
+
+	for _, route := range routes {
+
+		queue, err := rmq.DeclareQueue(route.Queue) //
+		if err != nil {
+			log.Println(err)
+		}
+
+		err = rmq.BindQueue(queue.Name, cfg.MEDIA_EXCHANGE, route.Key)
+		if err != nil {
+			log.Println(err)
+		}
+
 	}
-	err = rmq.BindQueue(queue.Name, cfg.MEDIA_EXCHANGE, "delete_media")
-	if err != nil {
-		log.Println(err)
-	}
-	err = rmq.Consume(queue.Name, mediaConsumer.Run)
+	err = rmq.Consume(routes)
 	if err != nil {
 		log.Println(err)
 	}

@@ -33,10 +33,10 @@ func (h *authHandler) Login(c *gin.Context) {
 			var jsErr *json.UnmarshalTypeError
 			var ve validator.ValidationErrors
 			if errors.As(err, &jsErr) {
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, nil))
 			} else if errors.As(err, &ve) {
 				errList := v.FormatValidation(ve)
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, nil))
 			} else {
 				res = handling.ResponseError(c, err)
 			}
@@ -74,10 +74,10 @@ func (h *authHandler) RefreshToken(c *gin.Context) {
 			var jsErr *json.UnmarshalTypeError
 			var ve validator.ValidationErrors
 			if errors.As(err, &jsErr) {
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, nil))
 			} else if errors.As(err, &ve) {
 				errList := v.FormatValidation(ve)
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, nil))
 			} else {
 				res = handling.ResponseError(c, err)
 			}
@@ -114,10 +114,10 @@ func (h *authHandler) Logout(c *gin.Context) {
 			var jsErr *json.UnmarshalTypeError
 			var ve validator.ValidationErrors
 			if errors.As(err, &jsErr) {
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, nil))
 			} else if errors.As(err, &ve) {
 				errList := v.FormatValidation(ve)
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, nil))
 			} else {
 				res = handling.ResponseError(c, err)
 			}

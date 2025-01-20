@@ -34,19 +34,19 @@ type categoryService struct {
 func (s *categoryService) GetCategories(ctx context.Context, m *[]model.Category) error {
 	err := s.cache.Get(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_CATEGORY), m)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get categories from cache", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get categories from cache", nil, nil)
 	}
 
 	if len(*m) == 0 {
 
 		err := s.categoryRepository.FindAll(s.db, m)
 		if err != nil {
-			return handling.NewErrorWrapper(handling.CodeServerError, "failed to get categories from db", nil, err)
+			return handling.NewErrorWrapper(handling.CodeServerError, "failed to get categories from db", nil, nil)
 		}
 
 		err = s.cache.Set(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_PRODUCT), *m, constant.CacheTTLOneDay)
 		if err != nil {
-			return handling.NewErrorWrapper(handling.CodeServerError, "failed to set categories to cache", nil, err)
+			return handling.NewErrorWrapper(handling.CodeServerError, "failed to set categories to cache", nil, nil)
 		}
 
 	}
@@ -57,7 +57,7 @@ func (s *categoryService) GetCategory(ctx context.Context, m *model.Category, id
 	categories := []model.Category{}
 	err := s.cache.Get(ctx, cache.GetCacheKey(s.cfg.CACHE_KEY_CATEGORY), &categories)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get categories from cache", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get categories from cache", nil, nil)
 	}
 
 	if len(categories) != 0 {
@@ -75,11 +75,11 @@ func (s *categoryService) GetCategory(ctx context.Context, m *model.Category, id
 
 	err = s.categoryRepository.FindByID(s.db, m, id)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get category from db", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to get category from db", nil, nil)
 	}
 
 	if m.ID == 0 {
-		return handling.NewErrorWrapper(handling.CodeNotFoundError, "data category not found", nil, err)
+		return handling.NewErrorWrapper(handling.CodeNotFoundError, "data category not found", nil, nil)
 	}
 
 	return nil

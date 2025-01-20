@@ -338,6 +338,7 @@ BEGIN
 		b.id, b.name 
 	FROM tran_product_category a
 	JOIN category b ON a.category_id = b.id
+	WHERE product_id = @product_id
 
 END
 GO
@@ -362,8 +363,10 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	DECLARE @deleted_tran_category TABLE (
-		category_id INT
+	DECLARE @merge_output TABLE (
+		action VARCHAR(30),
+		inserted_category_id INT,
+		deleted_category_id INT
 	)
 
 	DECLARE @tmp_tran_category TABLE (
@@ -386,12 +389,15 @@ BEGIN
 	WHEN NOT MATCHED BY source AND target.product_id = @product_id THEN
 	DELETE
 
-	OUTPUT DELETED.category_id INTO @deleted_tran_category;
+	OUTPUT $ACTION, INSERTED.category_id, DELETED.category_id INTO @merge_output;
 
 	SELECT 
-		b.id, b.name
-	FROM @deleted_tran_category a
-	JOIN category b ON a.category_id = b.id
+		a.action,
+		b.id AS inserted_id, b.name AS inserted_name,
+		c.id AS deleted_id, c.name AS deleted_name
+	FROM @merge_output a
+	LEFT JOIN category b ON a.inserted_category_id = b.id
+	LEFT JOIN category c ON a.deleted_category_id = b.id
 
 END
 GO
@@ -447,9 +453,12 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	DECLARE @res_deleted_picture TABLE (
-		id INT,
-		url VARCHAR(100)
+	DECLARE @merge_output TABLE (
+		action VARCHAR(30),
+		inserted_id INT,
+		inserted_url VARCHAR(100),
+		deleted_id INT,
+		deleted_url VARCHAR(100)
 	)
 
 	DECLARE @tmp_picture TABLE (
@@ -470,9 +479,9 @@ BEGIN
 	WHEN NOT MATCHED BY source AND target.product_id = @product_id THEN
 	DELETE
 
-	OUTPUT DELETED.id, DELETED.url INTO @res_deleted_picture;
+	OUTPUT $ACTION, INSERTED.id, INSERTED.url, DELETED.id, DELETED.url INTO @merge_output;
 
-	SELECT * FROM @res_deleted_picture
+	SELECT * FROM @merge_output
 
 END
 GO
@@ -500,6 +509,72 @@ BEGIN
 	WHERE id IN (
 		SELECT value FROM OPENJSON(@array_id)
 	)
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Ajulll
+-- Create date: 20241002
+-- Description:	Get product picture data
+-- =============================================
+CREATE PROCEDURE [dbo].[spMS_product_picture_data]
+	-- Add the parameters for the stored procedure here
+	@id INT = 0
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	SELECT 
+		id, url, product_id
+	FROM product_picture
+	WHERE @id = 0
+		OR
+		(
+			@id <> 0
+			AND
+			id = @id
+		)
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Ajulll
+-- Create date: 20241002
+-- Description:	Get all product picture data by product id
+-- =============================================
+CREATE PROCEDURE [dbo].[spMS_product_picture_data_by_product_id]
+	-- Add the parameters for the stored procedure here
+	@product_id INT = 0
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	SELECT 
+		id, url, product_id
+	FROM product_picture
+	WHERE @product_id = 0
+		OR
+		(
+			@product_id <> 0
+			AND
+			product_id = @product_id
+		)
 
 END
 GO

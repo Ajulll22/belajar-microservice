@@ -34,7 +34,7 @@ type RabbitMQ interface {
 	DeclareQueue(queueName string) (amqp.Queue, error)
 	BindQueue(queueName, exchangeName, routingKey string) error
 	Publish(exchange, routingKey string, message []byte) error
-	Consume(queue string, handler func([]byte) error) error
+	Consume(routes []ConsumerRoute) error
 	Close()
 }
 
@@ -90,27 +90,44 @@ func (r *rabbitMQ) Publish(exchange, routingKey string, message []byte) error {
 	return err
 }
 
-func (r *rabbitMQ) Consume(queue string, handler func([]byte) error) error {
-	msgs, err := r.Channel.Consume(
-		queue, // Queue name
-		"",    // Consumer name
-		true,  // Auto-ack
-		false, // Exclusive
-		false, // No-local
-		false, // No-wait
-		nil,   // Arguments
-	)
-	if err != nil {
-		return err
-	}
-
+func (r *rabbitMQ) Consume(routes []ConsumerRoute) error {
 	go func() {
-		for msg := range msgs {
-			err := handler(msg.Body)
+
+		for _, route := range routes {
+
+			msgs, err := r.Channel.Consume(
+				route.Queue,   // Queue name
+				"",            // Consumer name
+				route.AutoAck, // Auto-ack
+				false,         // Exclusive
+				false,         // No-local
+				false,         // No-wait
+				nil,           // Arguments
+			)
 			if err != nil {
-				log.Println("Error process message, ", err.Error())
+				log.Println(route.Queue, "failed", err.Error())
+				return
 			}
+
+			for msg := range msgs {
+
+				if route.Async {
+					go func(routeHandler ConsumerRoute, msg amqp.Delivery) {
+						err := routeHandler.Handler(msg)
+						if err != nil {
+							log.Println("Error process message, ", err.Error())
+						}
+					}(route, msg)
+				} else {
+					err := route.Handler(msg)
+					if err != nil {
+						log.Println("Error process message, ", err.Error())
+					}
+				}
+			}
+
 		}
+
 	}()
 
 	return nil
@@ -119,4 +136,12 @@ func (r *rabbitMQ) Consume(queue string, handler func([]byte) error) error {
 func (r *rabbitMQ) Close() {
 	r.Conn.Close()
 	r.Channel.Close()
+}
+
+type ConsumerRoute struct {
+	Key     string
+	Handler func(amqp.Delivery) error
+	Async   bool
+	AutoAck bool
+	Queue   string
 }

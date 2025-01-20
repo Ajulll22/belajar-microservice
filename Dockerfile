@@ -26,13 +26,13 @@ FROM alpine:latest
 # Set working directory
 WORKDIR /app
 
-# RUN apk add --no-cache bash
+RUN apk add --no-cache bash
 
 # Copy binary dari stage builder
 COPY --from=builder /app/bin /app/bin
 COPY --from=builder /app/config /app/config
+COPY --from=builder /app/scripts /app/scripts
 # COPY --from=builder /app/sql /app/sql
-# COPY --from=builder /app/scripts /app/scripts
 
 # Expose port (API Gateway default: 5000)
 EXPOSE 5000

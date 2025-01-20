@@ -42,6 +42,7 @@ func (c *redisCache) Set(ctx context.Context, key string, value interface{}, ttl
 		Ctx:   ctx,
 		Key:   key,
 		Value: value,
+		TTL:   ttl,
 	}
 
 	return c.cache.Set(&i)

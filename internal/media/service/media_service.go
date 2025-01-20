@@ -30,7 +30,7 @@ func NewMediaService(db *mongo.Database, cfg config.Config, mediaRepository repo
 func (s *mediaService) UploadMedia(mediaList *[]model.Media) error {
 	bucket, err := gridfs.NewBucket(s.db)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, nil)
 	}
 
 	data := *mediaList
@@ -38,7 +38,7 @@ func (s *mediaService) UploadMedia(mediaList *[]model.Media) error {
 	for i := 0; i < len(data); i++ {
 		err := s.mediaRepository.Upload(bucket, &data[i])
 		if err != nil {
-			return handling.NewErrorWrapper(handling.CodeServerError, "failed to upload file to gridfs", nil, err)
+			return handling.NewErrorWrapper(handling.CodeServerError, "failed to upload file to gridfs", nil, nil)
 		}
 	}
 
@@ -50,12 +50,12 @@ func (s *mediaService) UploadMedia(mediaList *[]model.Media) error {
 func (s *mediaService) DeleteMedia(fileID string) error {
 	bucket, err := gridfs.NewBucket(s.db)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, err)
+		return handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, nil)
 	}
 
 	err = s.mediaRepository.DeleteByID(bucket, fileID)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeNotFoundError, "file not found", nil, err)
+		return handling.NewErrorWrapper(handling.CodeNotFoundError, "file not found", nil, nil)
 	}
 
 	return nil
@@ -64,12 +64,12 @@ func (s *mediaService) DeleteMedia(fileID string) error {
 func (s *mediaService) GetMedia(fileID string) (buffer bytes.Buffer, err error) {
 	bucket, err := gridfs.NewBucket(s.db)
 	if err != nil {
-		return buffer, handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, err)
+		return buffer, handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, nil)
 	}
 
 	buffer, err = s.mediaRepository.FindByID(bucket, fileID)
 	if err != nil {
-		return buffer, handling.NewErrorWrapper(handling.CodeNotFoundError, "file not found", nil, err)
+		return buffer, handling.NewErrorWrapper(handling.CodeNotFoundError, "file not found", nil, nil)
 	}
 
 	return buffer, nil

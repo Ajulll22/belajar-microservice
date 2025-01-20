@@ -13,7 +13,7 @@ services:
       - sqlserver-data:/var/opt/mssql
     #   - ./sql:/sql                    
     #   - ./scripts:/scripts                    
-    # command: ["/bin/bash", "/scripts/entrypoint.sh"]
+    # command: ["/bin/bash", "/scripts/sql-server-migrate.sh"]
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -61,6 +61,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    entrypoint: ["/app/scripts/wait-for-mongo.sh", "/app/scripts/wait-for-rabbitmq.sh"]
     command: ["/app/bin/media"]
     depends_on:
       - mongo
@@ -72,7 +73,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # entrypoint: ["./scripts/wait-for-it.sh", "sqlserver:1433", "--"]
+    entrypoint: ["/app/scripts/wait-for-rabbitmq.sh", "/app/scripts/wait-for-sqlserver.sh"]
     command: ["/app/bin/user"]
     depends_on:
       - sqlserver
@@ -85,7 +86,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # entrypoint: ["./scripts/wait-for-it.sh", "sqlserver:1433", "--"]
+    entrypoint: ["/app/scripts/wait-for-rabbitmq.sh", "/app/scripts/wait-for-sqlserver.sh"]
     command: ["/app/bin/product"]
     depends_on:
       - sqlserver

@@ -52,7 +52,7 @@ func (h *productHandler) GetProduct(c *gin.Context) {
 		val, err := strconv.Atoi(paramID)
 		if err != nil {
 			validate = false
-			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "failed to convert id to int", nil, err))
+			res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "failed to convert id to int", nil, nil))
 		} else {
 			*ID = val
 		}
@@ -90,10 +90,10 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 			var jsErr *json.UnmarshalTypeError
 			var ve validator.ValidationErrors
 			if errors.As(err, &jsErr) {
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, nil))
 			} else if errors.As(err, &ve) {
 				errList := v.FormatValidation(ve)
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, nil))
 			} else {
 				res = handling.ResponseError(c, err)
 			}
@@ -138,7 +138,7 @@ func (h *productHandler) UpdateProduct(c *gin.Context) {
 	ID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		validate = false
-		res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "invalid parameter", nil, err))
+		res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "invalid parameter", nil, nil))
 	}
 
 	bodyRequest := request.UpdateProduct{}
@@ -151,10 +151,10 @@ func (h *productHandler) UpdateProduct(c *gin.Context) {
 			var jsErr *json.UnmarshalTypeError
 			var ve validator.ValidationErrors
 			if errors.As(err, &jsErr) {
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeClientError, "parse failed", nil, nil))
 			} else if errors.As(err, &ve) {
 				errList := v.FormatValidation(ve)
-				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, err))
+				res = handling.ResponseError(c, handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "invalid parameter", errList, nil))
 			} else {
 				res = handling.ResponseError(c, err)
 			}

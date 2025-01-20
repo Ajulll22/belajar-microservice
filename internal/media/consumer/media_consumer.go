@@ -6,43 +6,37 @@ import (
 
 	"github.com/Ajulll22/belajar-microservice/internal/media/config"
 	"github.com/Ajulll22/belajar-microservice/internal/media/dto/request"
-	"github.com/Ajulll22/belajar-microservice/internal/media/repository"
+	"github.com/Ajulll22/belajar-microservice/internal/media/service"
 	"github.com/Ajulll22/belajar-microservice/pkg/handling"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"github.com/streadway/amqp"
 )
 
-func NewMediaConsumer(db *mongo.Database, cfg config.Config, mediaRepository repository.MediaRepository) MediaConsumer {
-	return &mediaConsumer{db, cfg, mediaRepository}
+func NewMediaConsumer(cfg config.Config, mediaService service.MediaService) MediaConsumer {
+	return &mediaConsumer{cfg, mediaService}
 }
 
 type MediaConsumer interface {
-	Run([]byte) error
+	DeleteMedia(msg amqp.Delivery) error
 }
 
 type mediaConsumer struct {
-	db              *mongo.Database
-	cfg             config.Config
-	mediaRepository repository.MediaRepository
+	cfg          config.Config
+	mediaService service.MediaService
 }
 
-func (c *mediaConsumer) Run(messageByte []byte) error {
+func (c *mediaConsumer) DeleteMedia(msg amqp.Delivery) error {
+	messageByte := msg.Body
 	log.Println("Receive message :", string(messageByte))
 	messageBody := request.DeleteMedia{}
 
 	err := json.Unmarshal(messageByte, &messageBody)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "failed to unmarshal message", nil, err)
+		return handling.NewErrorWrapper(handling.CodeUnprocessableEntity, "failed to unmarshal message", nil, nil)
 	}
 
-	bucket, err := gridfs.NewBucket(c.db)
+	err = c.mediaService.DeleteMedia(messageBody.ID)
 	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeServerError, "failed to initialize gridfs", nil, err)
-	}
-
-	err = c.mediaRepository.DeleteByID(bucket, messageBody.ID)
-	if err != nil {
-		return handling.NewErrorWrapper(handling.CodeNotFoundError, "file not found", nil, err)
+		return err
 	}
 
 	log.Println("Success delete file", messageBody.ID)
