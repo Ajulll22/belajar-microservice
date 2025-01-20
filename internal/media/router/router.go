@@ -10,6 +10,7 @@ import (
 	"github.com/Ajulll22/belajar-microservice/internal/media/service"
 	"github.com/Ajulll22/belajar-microservice/pkg/broker"
 	"github.com/gin-gonic/gin"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -49,26 +50,75 @@ func RegisterConsumer(db *mongo.Database, cfg config.Config, rmq broker.RabbitMQ
 		},
 	}
 
-	err := rmq.DeclareExchange(cfg.MEDIA_EXCHANGE, "direct")
+	mainExchange := cfg.MEDIA_EXCHANGE
+	retryExchange := "retry_" + cfg.MEDIA_EXCHANGE
+	dlxExchange := "dlx_" + cfg.MEDIA_EXCHANGE
+
+	retryQueue := "retry_" + cfg.MEDIA_QUEUE
+	dlxQueue := "dlx" + cfg.MEDIA_QUEUE
+
+	err := rmq.DeclareExchange(mainExchange, "direct")
 	if err != nil {
 		log.Println(err)
+		return
+	}
+	err = rmq.DeclareExchange(retryExchange, "direct")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = rmq.DeclareExchange(dlxExchange, "direct")
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
 	for _, route := range routes {
 
-		queue, err := rmq.DeclareQueue(route.Queue) //
+		queue, err := rmq.DeclareQueue(route.Queue, amqp.Table{
+			"x-dead-letter-exchange": retryExchange,
+		})
 		if err != nil {
 			log.Println(err)
+			return
 		}
 
-		err = rmq.BindQueue(queue.Name, cfg.MEDIA_EXCHANGE, route.Key)
+		err = rmq.BindQueue(queue.Name, mainExchange, route.Key)
 		if err != nil {
 			log.Println(err)
+			return
 		}
 
 	}
+
+	_, err = rmq.DeclareQueue(retryQueue, amqp.Table{
+		"x-dead-letter-exchange": mainExchange,
+		"x-message-ttl":          int32(5000), // 5 seconds TTL
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	_, err = rmq.DeclareQueue(dlxQueue, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = rmq.BindQueue(retryQueue, retryExchange, "retry_routing_key")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = rmq.BindQueue(dlxQueue, dlxExchange, "dlx_routing_key")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	err = rmq.Consume(routes)
 	if err != nil {
 		log.Println(err)
+		return
 	}
 }

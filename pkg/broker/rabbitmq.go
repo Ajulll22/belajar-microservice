@@ -31,7 +31,7 @@ func RabbitMQConnect(RABBIT_HOST, RABBIT_USER, RABBIT_PASS, RABBIT_PORT string) 
 
 type RabbitMQ interface {
 	DeclareExchange(exchangeName, exchangeType string) error
-	DeclareQueue(queueName string) (amqp.Queue, error)
+	DeclareQueue(queueName string, args amqp.Table) (amqp.Queue, error)
 	BindQueue(queueName, exchangeName, routingKey string) error
 	Publish(exchange, routingKey string, message []byte) error
 	Consume(routes []ConsumerRoute) error
@@ -55,14 +55,14 @@ func (r *rabbitMQ) DeclareExchange(exchangeName, exchangeType string) error {
 	)
 }
 
-func (r *rabbitMQ) DeclareQueue(queueName string) (amqp.Queue, error) {
+func (r *rabbitMQ) DeclareQueue(queueName string, args amqp.Table) (amqp.Queue, error) {
 	return r.Channel.QueueDeclare(
 		queueName, // name
 		true,      // durable
 		false,     // delete when unused
 		false,     // exclusive
 		false,     // no-wait
-		nil,       // arguments
+		args,      // arguments
 	)
 }
 
@@ -91,9 +91,9 @@ func (r *rabbitMQ) Publish(exchange, routingKey string, message []byte) error {
 }
 
 func (r *rabbitMQ) Consume(routes []ConsumerRoute) error {
-	go func() {
+	for _, route := range routes {
 
-		for _, route := range routes {
+		go func(route ConsumerRoute) {
 
 			msgs, err := r.Channel.Consume(
 				route.Queue,   // Queue name
@@ -126,9 +126,9 @@ func (r *rabbitMQ) Consume(routes []ConsumerRoute) error {
 				}
 			}
 
-		}
+		}(route)
 
-	}()
+	}
 
 	return nil
 }
