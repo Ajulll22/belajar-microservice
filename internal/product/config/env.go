@@ -15,6 +15,10 @@ type Config struct {
 	REDIS_HOST         string
 	REDIS_PORT         string
 	REDIS_PASS         string
+	RABBIT_HOST        string
+	RABBIT_PORT        string
+	RABBIT_USER        string
+	RABBIT_PASS        string
 	CACHE_KEY_PRODUCT  string
 	CACHE_KEY_CATEGORY string
 	constant.GlobalConfig
@@ -30,6 +34,10 @@ func GetEnv() Config {
 		REDIS_HOST:         os.Getenv("REDIS_HOST"),
 		REDIS_PORT:         os.Getenv("REDIS_PORT"),
 		REDIS_PASS:         os.Getenv("REDIS_PASS"),
+		RABBIT_HOST:        os.Getenv("RABBIT_HOST"),
+		RABBIT_PORT:        os.Getenv("RABBIT_PORT"),
+		RABBIT_USER:        os.Getenv("RABBIT_USER"),
+		RABBIT_PASS:        os.Getenv("RABBIT_PASS"),
 		CACHE_KEY_PRODUCT:  os.Getenv("CACHE_KEY_PRODUCT"),
 		CACHE_KEY_CATEGORY: os.Getenv("CACHE_KEY_CATEGORY"),
 

@@ -116,7 +116,7 @@ func RegisterConsumer(db *mongo.Database, cfg config.Config, rmq broker.RabbitMQ
 		return
 	}
 
-	err = rmq.Consume(routes)
+	err = rmq.Consume(routes, cfg.RABBIT_MAX_RETRY, retryExchange, dlxExchange)
 	if err != nil {
 		log.Println(err)
 		return

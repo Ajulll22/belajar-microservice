@@ -87,6 +87,19 @@ func NewErrorWrapper(code int, msg string, validation []validator.ErrorValidator
 	}
 }
 
+func RetryError(err error) bool {
+	var ew *ErrorWrapper
+	if errors.As(err, &ew) {
+		if ew.Code != CodeServerError || ew.Code != CodeConflictError {
+			return false
+		}
+	} else {
+		return false
+	}
+
+	return true
+}
+
 func ResponseError(c *gin.Context, err error) BaseResponse[any] {
 	resCode := http.StatusInternalServerError
 	msg := MsgServerError

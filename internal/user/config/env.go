@@ -16,6 +16,7 @@ type Config struct {
 	REDIS_PORT     string
 	REDIS_PASS     string
 	CACHE_KEY_USER string
+	REFRESH_SECRET string
 	constant.GlobalConfig
 }
 
@@ -30,6 +31,7 @@ func GetEnv() Config {
 		REDIS_PORT:     os.Getenv("REDIS_PORT"),
 		REDIS_PASS:     os.Getenv("REDIS_PASS"),
 		CACHE_KEY_USER: os.Getenv("CACHE_KEY_USER"),
+		REFRESH_SECRET: os.Getenv("REFRESH_SECRET"),
 
 		GlobalConfig: constant.GetGlobalConfig(),
 	}

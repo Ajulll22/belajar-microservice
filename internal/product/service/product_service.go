@@ -323,6 +323,7 @@ func (s *productService) UpdateProduct(ctx context.Context, m *model.Product, pi
 				s.cfg.MEDIA_EXCHANGE,
 				"delete_media",
 				messageByte,
+				nil,
 			)
 
 		}

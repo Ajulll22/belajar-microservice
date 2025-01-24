@@ -3,6 +3,7 @@ package broker
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/Ajulll22/belajar-microservice/pkg/security"
 	"github.com/streadway/amqp"
@@ -33,8 +34,8 @@ type RabbitMQ interface {
 	DeclareExchange(exchangeName, exchangeType string) error
 	DeclareQueue(queueName string, args amqp.Table) (amqp.Queue, error)
 	BindQueue(queueName, exchangeName, routingKey string) error
-	Publish(exchange, routingKey string, message []byte) error
-	Consume(routes []ConsumerRoute) error
+	Publish(exchange, routingKey string, message []byte, header amqp.Table) error
+	Consume(routes []ConsumerRoute, maxRetry int, retryExchange string, dlxExchange string) error
 	Close()
 }
 
@@ -76,7 +77,7 @@ func (r *rabbitMQ) BindQueue(queueName, exchangeName, routingKey string) error {
 	)
 }
 
-func (r *rabbitMQ) Publish(exchange, routingKey string, message []byte) error {
+func (r *rabbitMQ) Publish(exchange, routingKey string, message []byte, header amqp.Table) error {
 	err := r.Channel.Publish(
 		exchange,   // Exchange
 		routingKey, // Routing key
@@ -85,12 +86,13 @@ func (r *rabbitMQ) Publish(exchange, routingKey string, message []byte) error {
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        message,
+			Headers:     header,
 		},
 	)
 	return err
 }
 
-func (r *rabbitMQ) Consume(routes []ConsumerRoute) error {
+func (r *rabbitMQ) Consume(routes []ConsumerRoute, maxRetry int, retryExchange string, dlxExchange string) error {
 	for _, route := range routes {
 
 		go func(route ConsumerRoute) {
@@ -111,18 +113,78 @@ func (r *rabbitMQ) Consume(routes []ConsumerRoute) error {
 
 			for msg := range msgs {
 
+				// Get current retry count from headers
+				retryCount := 0
+				if val, ok := msg.Headers["x-retry-count"]; ok {
+					if count, err := strconv.Atoi(val.(string)); err == nil {
+						retryCount = count
+					}
+				}
+
+				// Get original routing key from headers
+				originalRoutingKey := route.Queue
+				if val, ok := msg.Headers["x-original-routing-key"]; ok {
+					originalRoutingKey = val.(string)
+				}
+
 				if route.Async {
-					go func(routeHandler ConsumerRoute, msg amqp.Delivery) {
-						err := routeHandler.Handler(msg)
+					go func(route ConsumerRoute, msg amqp.Delivery) {
+						err := route.Handler(msg)
 						if err != nil {
 							log.Println("Error process message, ", err.Error())
+
+							if retryCount >= maxRetry {
+								log.Printf("[%s] Max retry count reached (%d). Sending to DLX.", route.Queue, retryCount)
+
+								err := r.Publish(dlxExchange, "dlx_routing_key", msg.Body, nil)
+								if err != nil {
+									log.Println("Failed to publish to dlx")
+									return
+								}
+							} else {
+								log.Printf("[%s] Retrying message. Retry count: %d", route.Queue, retryCount+1)
+
+								err := r.Publish(retryExchange, "retry_routing_key", msg.Body, amqp.Table{
+									"x-retry-count":          strconv.Itoa(retryCount + 1),
+									"x-original-routing-key": originalRoutingKey,
+								})
+								if err != nil {
+									log.Println("Failed to publish to retry")
+									return
+								}
+							}
 						}
+
+						msg.Ack(false)
 					}(route, msg)
 				} else {
 					err := route.Handler(msg)
 					if err != nil {
 						log.Println("Error process message, ", err.Error())
+
+						if retryCount >= maxRetry {
+							log.Printf("[%s] Max retry count reached (%d). Sending to DLX.", route.Queue, retryCount)
+
+							err := r.Publish(dlxExchange, "dlx_routing_key", msg.Body, nil)
+							if err != nil {
+								log.Println("Failed to publish to dlx")
+								return
+							}
+						} else {
+							log.Printf("[%s] Retrying message. Retry count: %d", route.Queue, retryCount+1)
+
+							err := r.Publish(retryExchange, "retry_routing_key", msg.Body, amqp.Table{
+								"x-retry-count":          strconv.Itoa(retryCount + 1),
+								"x-original-routing-key": originalRoutingKey,
+							})
+							if err != nil {
+								log.Println("Failed to publish to retry")
+								return
+							}
+						}
 					}
+
+					msg.Ack(false)
 				}
 			}
 

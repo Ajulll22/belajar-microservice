@@ -3,10 +3,11 @@ package model
 import "time"
 
 type AuditLog struct {
-	Timestamp time.Time              `json:"timestamp"`
-	Event     string                 `json:"event"`
-	User      string                 `json:"user"`
-	IpAddress string                 `json:"ip_address"`
-	Status    string                 `json:"status"`
+	TraceID   string                 `json:"trace_id" validate:"required"`
+	Timestamp time.Time              `json:"timestamp" validate:"required"`
+	Event     string                 `json:"event" validate:"required"`
+	User      string                 `json:"user" validate:"required"`
+	IpAddress string                 `json:"ip_address" validate:"required"`
+	Status    string                 `json:"status" validate:"required"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }

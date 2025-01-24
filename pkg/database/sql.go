@@ -26,33 +26,6 @@ func SQLConnect(DB_USER string, DB_PASS string, DB_HOST string, DB_PORT string, 
 	if err != nil {
 		panic("failed to connect database")
 	}
-	// if err != nil {
-	// 	newDsn := fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=master", db_username, clear_password, db_server, db_port)
-	// 	db, err = gorm.Open(sqlserver.Open(newDsn), &gorm.Config{
-	// 		Logger:      logger.Default.LogMode(logger.Error),
-	// 		PrepareStmt: true,
-	// 	})
-	// 	if err != nil {
-	// 		panic("failed to connect database")
-	// 	}
-
-	// 	// queryFile, err := os.ReadFile(fmt.Sprintf("./sql/%s.sql", db_name))
-	// 	// if err != nil {
-	// 	// 	panic("failed to read file")
-	// 	// }
-	// 	// if err := db.Exec(string(queryFile)).Error; err != nil {
-	// 	if err := db.Exec(fmt.Sprintf("CREATE DATABASE [%s]", db_name)).Error; err != nil {
-	// 		panic("failed to exec query")
-	// 	}
-
-	// 	db, err = gorm.Open(sqlserver.Open(dsn), &gorm.Config{
-	// 		Logger:      logger.Default.LogMode(logger.Error),
-	// 		PrepareStmt: true,
-	// 	})
-	// 	if err != nil {
-	// 		panic("failed to connect database new")
-	// 	}
-	// }
 
 	return db
 }

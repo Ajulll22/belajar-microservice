@@ -14,11 +14,6 @@ type GlobalConfig struct {
 	APP_ENV              string
 	HOST                 string
 	ACCESS_SECRET        string
-	REFRESH_SECRET       string
-	RABBIT_HOST          string
-	RABBIT_PORT          string
-	RABBIT_USER          string
-	RABBIT_PASS          string
 	MEDIA_EXCHANGE       string
 	MEDIA_QUEUE          string
 	LOGGER_EXCHANGE      string
@@ -38,11 +33,6 @@ func GetGlobalConfig() GlobalConfig {
 		APP_ENV:              os.Getenv("APP_ENV"),
 		HOST:                 os.Getenv("HOST"),
 		ACCESS_SECRET:        os.Getenv("ACCESS_SECRET"),
-		REFRESH_SECRET:       os.Getenv("REFRESH_SECRET"),
-		RABBIT_HOST:          os.Getenv("RABBIT_HOST"),
-		RABBIT_PORT:          os.Getenv("RABBIT_PORT"),
-		RABBIT_USER:          os.Getenv("RABBIT_USER"),
-		RABBIT_PASS:          os.Getenv("RABBIT_PASS"),
 		MEDIA_EXCHANGE:       os.Getenv("MEDIA_EXCHANGE"),
 		MEDIA_QUEUE:          os.Getenv("MEDIA_QUEUE"),
 		LOGGER_EXCHANGE:      os.Getenv("LOGGER_EXCHANGE"),
